@@ -1,6 +1,6 @@
 {
   "name": "gs-ui-probe",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "description": "Drive a web UI the way a person does: real pointer moves, real drags, real keystrokes, against anything you can point at. Playwright underneath, no knowledge of your application.",
   "license": "AGPL-3.0-or-later",
   "type": "module",
