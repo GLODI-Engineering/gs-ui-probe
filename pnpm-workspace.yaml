@@ -1,0 +1,5 @@
+# esbuild ships a prebuilt binary and needs its install script to run.
+# pnpm leaves this as a prompt on first install; answering it is what stops
+# every later `pnpm run` failing with ERR_PNPM_IGNORED_BUILDS.
+allowBuilds:
+  esbuild: true

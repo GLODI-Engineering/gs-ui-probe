@@ -1,0 +1,46 @@
+{
+  "name": "gs-ui-probe",
+  "version": "0.2.0",
+  "description": "Drive a web UI the way a person does: real pointer moves, real drags, real keystrokes, against anything you can point at. Playwright underneath, no knowledge of your application.",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "peerDependencies": {
+    "@playwright/test": ">=1.40"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.4"
+  },
+  "keywords": [
+    "playwright",
+    "e2e",
+    "testing",
+    "pointer",
+    "drag",
+    "canvas"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GLODI-Engineering/gs-ui-probe.git"
+  }
+}
