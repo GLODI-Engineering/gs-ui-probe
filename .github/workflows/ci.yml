@@ -48,8 +48,13 @@ jobs:
       - name: test
         run: pnpm test
 
-      - name: build
-        run: pnpm build
+      # `pnpm build` is run by the check below, which then fails if the result
+      # differs from the committed `dist/`. That directory is the artefact
+      # consumers load — they install this package from git, so nothing rebuilds
+      # it for them — and a commit that edits `src/` without refreshing it ships
+      # the previous behaviour while the repository looks correct.
+      - name: build, and verify the committed dist/ matches it
+        run: pnpm check-dist
 
   # ---------------------------------------------------------------------------
   # Conventional Commits, matching the sibling repositories. Pull requests only:
