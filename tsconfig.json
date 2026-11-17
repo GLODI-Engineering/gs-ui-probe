@@ -13,7 +13,13 @@
     "skipLibCheck": true,
     "noEmit": true,
     "verbatimModuleSyntax": true,
-    "types": ["node"]
+    // No ambient type packages. Nothing in `src` or `tests` touches a Node
+    // API — this library speaks to a browser through Playwright's own types
+    // and the tests import vitest explicitly — and leaving this unset lets
+    // tsc pull in whatever `@types/*` it finds walking up from here, which is
+    // how `"types": ["node"]` typechecked for a year on a workstation with
+    // @types/node installed in $HOME while failing on every clean checkout.
+    "types": []
   },
   "include": ["src", "tests"]
 }
