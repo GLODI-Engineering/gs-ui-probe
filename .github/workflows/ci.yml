@@ -1,0 +1,66 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # The three gates from `package.json`, in the order a failure is cheapest to
+  # read: types, then behaviour, then the build that produces what consumers
+  # actually load.
+  #
+  # `ubuntu-latest` only. macOS and Windows runners are not to be added here:
+  # nothing in this package is platform-specific — it drives a browser through
+  # Playwright's API and never touches a path, a shell or a native binary — so a
+  # second platform would spend CI minutes to re-run identical assertions.
+  # ---------------------------------------------------------------------------
+  node:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # No `version:` here on purpose — `package.json`'s `packageManager` field
+      # pins pnpm, and giving both makes action-setup fail with "Multiple
+      # versions of pnpm specified" before any step runs.
+      - uses: pnpm/action-setup@v4
+
+      # setup-node's pnpm cache needs the pnpm binary to already exist, which is
+      # why action-setup runs first.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # `--frozen-lockfile` so a pull request that edits `package.json` without
+      # regenerating `pnpm-lock.yaml` fails here, rather than resolving
+      # something other than what a consumer installing from git will get.
+      - run: pnpm install --frozen-lockfile
+
+      - name: typecheck
+        run: pnpm typecheck
+
+      - name: test
+        run: pnpm test
+
+      - name: build
+        run: pnpm build
+
+  # ---------------------------------------------------------------------------
+  # Conventional Commits, matching the sibling repositories. Pull requests only:
+  # on a push to `main` the range this action inspects is the merge itself, and
+  # a merge commit's subject is not a conventional one.
+  # ---------------------------------------------------------------------------
+  commit-lint:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: webiny/action-conventional-commits@v1.3.0
