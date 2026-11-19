@@ -16,6 +16,20 @@ await probe.drag(sourcePort, targetPort, { via: [{ x: 400, y: 200 }] });
 await probe.press("Control+Z");
 ```
 
+## Install
+
+Not on npm. The package is consumed straight from git — which is why `dist/` is committed —
+so a tag is the version you pin:
+
+```sh
+pnpm add git+https://github.com/GLODI-Engineering/gs-ui-probe#v0.2.2
+npm  install github:GLODI-Engineering/gs-ui-probe#v0.2.2
+```
+
+`@playwright/test` >= 1.40 is a **peer** dependency: `Probe` wraps a Playwright `Page` and
+brings no browser of its own, so it uses the one your suite already installs. Nothing else is
+required at runtime.
+
 ## Why it exists
 
 An end-to-end test that fakes the interesting part tests nothing. The suite
@@ -113,12 +127,52 @@ above it:
 
 ```
 scenario    "build the circuit"        — calls actions only
-actions     placeBlock, wireports, …   — calls the probe only
+actions     placeBlock, wirePorts, …   — calls the probe only
 gs-ui-probe click, drag, press         — knows nothing about your app
 ```
 
 Keep the middle layer in your own repo. If an action needs a concept from
 your domain, it belongs there, not here.
+
+## What it did: `probe.trace`
+
+Every action is recorded on `probe.trace` as it happens, and a failing action throws with the
+whole history attached — because the action that throws is rarely the one that was wrong.
+
+```ts
+import { describeAction, Probe } from "gs-ui-probe";
+
+const probe = new Probe(page, { onAction: (a) => console.log(describeAction(a)) });
+
+probe.trace.note("build the divider");
+await probe.click(addResistor);
+await probe.drag(sourcePort, targetPort);
+await probe.press("Control+S");
+
+console.log(probe.trace.format());
+```
+
+```text
+what the probe did:
+     0ms -- build the divider
+     0ms    click (120, 80)
+     1ms    drag (120, 80) -> (320, 80)
+     1ms    press Control+S
+```
+
+| member | what it gives you |
+| --- | --- |
+| `trace.actions` | `RecordedAction[]` — each with `at`, `durationMs` and `failed` when it threw |
+| `trace.format()` | the block above, as a string; this is what an action's error message carries |
+| `trace.note(text)` | a free-text marker, printed with `--`, for structuring a long scenario |
+| `trace.clear()` | forget everything so far, for a per-step assertion |
+| `onAction` option | a callback per action, for streaming into your own reporter |
+
+Besides `Probe`, the package exports the pieces it is built from, so a caller can aim and
+measure without going through an action: `anchorPoint` and `resolveTarget` (where a target
+actually is), `pathBetween` with `easeInOutCubic` and `jitter` (the motion a drag would take),
+`distance`, `describeTarget`, `describeAction`, and `TargetNotVisibleError`, which is what a
+target that cannot be aimed at throws.
 
 ## Testing it
 
